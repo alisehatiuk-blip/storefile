@@ -5,7 +5,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 export const api = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
@@ -17,11 +16,13 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
+  (res) => res,
+  (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
-      localStorage.removeItem('admin_access_token');
-      if (typeof window !== 'undefined') window.location.href = '/login';
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+        localStorage.removeItem('admin_access_token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

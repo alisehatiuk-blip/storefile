@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import api from '@/lib/api';
 
 interface AdminUser {
@@ -17,17 +17,22 @@ interface AdminAuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  _hasHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  setHasHydrated: (v: boolean) => void;
 }
 
 export const useAdminAuthStore = create<AdminAuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       accessToken: null,
       isAuthenticated: false,
       isLoading: false,
+      _hasHydrated: false,
+
+      setHasHydrated: (v) => set({ _hasHydrated: v }),
 
       login: async (email, password) => {
         set({ isLoading: true });
@@ -39,7 +44,9 @@ export const useAdminAuthStore = create<AdminAuthState>()(
             throw new Error('دسترسی غیرمجاز. فقط مدیران می‌توانند وارد شوند.');
           }
 
-          localStorage.setItem('admin_access_token', accessToken);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('admin_access_token', accessToken);
+          }
           set({ user, accessToken, isAuthenticated: true, isLoading: false });
         } catch (error) {
           set({ isLoading: false });
@@ -48,13 +55,26 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       },
 
       logout: () => {
-        localStorage.removeItem('admin_access_token');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('admin_access_token');
+        }
         set({ user: null, accessToken: null, isAuthenticated: false });
       },
     }),
     {
-      name: 'admin-auth',
-      partialize: (state) => ({ user: state.user, accessToken: state.accessToken, isAuthenticated: state.isAuthenticated }),
+      name: 'admin-auth-store',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+        if (state?.accessToken && typeof window !== 'undefined') {
+          localStorage.setItem('admin_access_token', state.accessToken);
+        }
+      },
     }
   )
 );

@@ -75,7 +75,7 @@ export default function AdminTicketDetailPage({ params }: { params: { id: string
 
       {/* Messages */}
       <div className="card">
-        <div className="divide-y" style={{ divideOpacity: 0.05 }}>
+        <div className="divide-y" >
           {[...(data.messages || [])].reverse().map((msg: any) => {
             const isAdminMsg = msg.senderRole === 'admin';
             return (

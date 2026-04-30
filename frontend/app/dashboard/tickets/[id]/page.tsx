@@ -93,7 +93,7 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
       </div>
 
       {/* Messages */}
-      <div className="card mb-4 divide-y" style={{ divideColor: 'rgba(255,255,255,0.04)' }}>
+      <div className="card mb-4 divide-y" >
         {(data.messages || []).length === 0 ? (
           <div className="p-8 text-center" style={{ color: '#475569' }}>
             <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />

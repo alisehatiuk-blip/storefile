@@ -20,14 +20,12 @@ interface AdminAuthState {
   init: () => void;
 }
 
-// Simple store - no SSR persist, read from localStorage manually
 export const useAdminAuthStore = create<AdminAuthState>((set) => ({
   user: null,
   accessToken: null,
   isAuthenticated: false,
   isLoading: false,
 
-  // Call this on client mount to hydrate from localStorage
   init: () => {
     if (typeof window === 'undefined') return;
     try {
@@ -35,12 +33,8 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed?.accessToken && parsed?.user) {
-          set({
-            user: parsed.user,
-            accessToken: parsed.accessToken,
-            isAuthenticated: true,
-          });
           localStorage.setItem('admin_access_token', parsed.accessToken);
+          set({ user: parsed.user, accessToken: parsed.accessToken, isAuthenticated: true });
         }
       }
     } catch { /* ignore */ }
@@ -49,11 +43,24 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
   login: async (email, password) => {
     set({ isLoading: true });
     try {
-      // Dynamic import to avoid SSR issues
-      const axios = (await import('axios')).default;
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
-      const { data } = await axios.post(`${API_URL}/auth/login`, { email, password });
-      const { accessToken, user } = data.data;
+      // Use fetch directly to /api proxy (avoids cloudflare tunnel interstitial)
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
+      const res = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'خطا در ورود' }));
+        throw new Error(err.message || 'خطا در ورود');
+      }
+
+      const json = await res.json();
+
+      if (!json.success) throw new Error(json.message || 'خطا در ورود');
+
+      const { accessToken, user } = json.data;
 
       if (!['admin', 'super_admin'].includes(user.role)) {
         throw new Error('دسترسی غیرمجاز. فقط مدیران می‌توانند وارد شوند.');

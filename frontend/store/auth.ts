@@ -1,9 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { User } from '@/types';
-import api from '@/lib/api';
 
 interface AuthState {
   user: User | null;
@@ -11,11 +9,10 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  _hasHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
-  setHasHydrated: (state: boolean) => void;
+  init: () => void;
 }
 
 interface RegisterData {
@@ -26,76 +23,91 @@ interface RegisterData {
   phone?: string;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      accessToken: null,
-      refreshToken: null,
-      isAuthenticated: false,
-      isLoading: false,
-      _hasHydrated: false,
+const getApiBase = () => {
+  if (typeof window !== 'undefined') return window.location.origin + '/api';
+  return 'http://localhost:3000/api';
+};
 
-      setHasHydrated: (state) => set({ _hasHydrated: state }),
+async function callApi(path: string, method: string, body?: object, token?: string) {
+  const res = await fetch(`${getApiBase()}${path}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message || 'خطا در درخواست');
+  return json;
+}
 
-      login: async (email, password) => {
-        set({ isLoading: true });
-        try {
-          const { data } = await api.post('/auth/login', { email, password });
-          const { accessToken, refreshToken, user } = data.data;
-          // Persist tokens in localStorage manually too
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('access_token', accessToken);
-            localStorage.setItem('refresh_token', refreshToken);
-          }
-          set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false });
-        } catch (error) {
-          set({ isLoading: false });
-          throw error;
-        }
-      },
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  accessToken: null,
+  refreshToken: null,
+  isAuthenticated: false,
+  isLoading: false,
 
-      register: async (registerData) => {
-        set({ isLoading: true });
-        try {
-          const { data } = await api.post('/auth/register', registerData);
-          const { accessToken, refreshToken, user } = data.data;
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('access_token', accessToken);
-            localStorage.setItem('refresh_token', refreshToken);
-          }
-          set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false });
-        } catch (error) {
-          set({ isLoading: false });
-          throw error;
+  init: () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('auth-store');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.accessToken) {
+          localStorage.setItem('access_token', parsed.accessToken);
+          if (parsed.refreshToken) localStorage.setItem('refresh_token', parsed.refreshToken);
+          set({ user: parsed.user, accessToken: parsed.accessToken, refreshToken: parsed.refreshToken, isAuthenticated: true });
         }
-      },
+      }
+    } catch { /* ignore */ }
+  },
 
-      logout: async () => {
-        try { await api.post('/auth/logout'); } catch { /* ignore */ }
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-        }
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
-      },
-    }),
-    {
-      name: 'auth-store',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated,
-      }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
-        // Re-sync token to localStorage key that api interceptor reads
-        if (state?.accessToken && typeof window !== 'undefined') {
-          localStorage.setItem('access_token', state.accessToken);
-        }
-      },
+  login: async (email, password) => {
+    set({ isLoading: true });
+    try {
+      const json = await callApi('/auth/login', 'POST', { email, password });
+      const { accessToken, refreshToken, user } = json.data;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('access_token', accessToken);
+        localStorage.setItem('refresh_token', refreshToken);
+        localStorage.setItem('auth-store', JSON.stringify({ accessToken, refreshToken, user }));
+      }
+      set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false });
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
     }
-  )
-);
+  },
+
+  register: async (registerData) => {
+    set({ isLoading: true });
+    try {
+      const json = await callApi('/auth/register', 'POST', registerData);
+      const { accessToken, refreshToken, user } = json.data;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('access_token', accessToken);
+        localStorage.setItem('refresh_token', refreshToken);
+        localStorage.setItem('auth-store', JSON.stringify({ accessToken, refreshToken, user }));
+      }
+      set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false });
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (token) await callApi('/auth/logout', 'POST', undefined, token);
+    } catch { /* ignore */ }
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('auth-store');
+    }
+    set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
+  },
+}));

@@ -20,21 +20,23 @@ const navItems = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, user, logout, _hasHydrated } = useAuthStore();
+  const { isAuthenticated, user, logout, init } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    init();
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (mounted && _hasHydrated && !isAuthenticated) {
+    if (mounted && !isAuthenticated) {
       router.push('/login');
     }
-  }, [mounted, _hasHydrated, isAuthenticated, router]);
+  }, [mounted, isAuthenticated, router]);
 
-  // Show loading spinner while hydrating
-  if (!mounted || !_hasHydrated) {
+  if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f1a' }}>
         <div className="w-8 h-8 rounded-full border-2 animate-spin" style={{ borderColor: 'rgba(99,102,241,0.2)', borderTopColor: '#6366f1' }} />

@@ -40,7 +40,7 @@ export default function AdminTopbar({ onMenuToggle }: Props) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     logout();
     toast.success('با موفقیت خارج شدید');
     router.push('/login');

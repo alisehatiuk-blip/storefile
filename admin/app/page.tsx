@@ -1,29 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAdminAuthStore } from '@/store/auth';
 
 export default function AdminRoot() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    if (!mounted) return;
-    // Read directly from localStorage for immediate check
     const token = typeof window !== 'undefined' ? localStorage.getItem('admin_access_token') : null;
-    if (token) {
-      router.replace('/dashboard');
-    } else {
-      router.replace('/login');
-    }
-  }, [mounted, router]);
+    router.replace(token ? '/dashboard' : '/login');
+  }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0f1a' }}>
-      <div className="w-8 h-8 rounded-full border-2 animate-spin" style={{ borderColor: 'rgba(99,102,241,0.2)', borderTopColor: '#6366f1' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f1a' }}>
+      <div style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid rgba(99,102,241,0.15)', borderTopColor: '#6366f1', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

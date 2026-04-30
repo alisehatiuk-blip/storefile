@@ -1,8 +1,6 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import api from '@/lib/api';
 
 interface AdminUser {
   id: string;
@@ -17,64 +15,67 @@ interface AdminAuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  _hasHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  setHasHydrated: (v: boolean) => void;
+  init: () => void;
 }
 
-export const useAdminAuthStore = create<AdminAuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      accessToken: null,
-      isAuthenticated: false,
-      isLoading: false,
-      _hasHydrated: false,
+// Simple store - no SSR persist, read from localStorage manually
+export const useAdminAuthStore = create<AdminAuthState>((set) => ({
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
+  isLoading: false,
 
-      setHasHydrated: (v) => set({ _hasHydrated: v }),
-
-      login: async (email, password) => {
-        set({ isLoading: true });
-        try {
-          const { data } = await api.post('/auth/login', { email, password });
-          const { accessToken, user } = data.data;
-
-          if (!['admin', 'super_admin'].includes(user.role)) {
-            throw new Error('دسترسی غیرمجاز. فقط مدیران می‌توانند وارد شوند.');
-          }
-
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('admin_access_token', accessToken);
-          }
-          set({ user, accessToken, isAuthenticated: true, isLoading: false });
-        } catch (error) {
-          set({ isLoading: false });
-          throw error;
+  // Call this on client mount to hydrate from localStorage
+  init: () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('admin-auth-store');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.accessToken && parsed?.user) {
+          set({
+            user: parsed.user,
+            accessToken: parsed.accessToken,
+            isAuthenticated: true,
+          });
+          localStorage.setItem('admin_access_token', parsed.accessToken);
         }
-      },
+      }
+    } catch { /* ignore */ }
+  },
 
-      logout: () => {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('admin_access_token');
-        }
-        set({ user: null, accessToken: null, isAuthenticated: false });
-      },
-    }),
-    {
-      name: 'admin-auth-store',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        isAuthenticated: state.isAuthenticated,
-      }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
-        if (state?.accessToken && typeof window !== 'undefined') {
-          localStorage.setItem('admin_access_token', state.accessToken);
-        }
-      },
+  login: async (email, password) => {
+    set({ isLoading: true });
+    try {
+      // Dynamic import to avoid SSR issues
+      const axios = (await import('axios')).default;
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+      const { data } = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const { accessToken, user } = data.data;
+
+      if (!['admin', 'super_admin'].includes(user.role)) {
+        throw new Error('دسترسی غیرمجاز. فقط مدیران می‌توانند وارد شوند.');
+      }
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('admin_access_token', accessToken);
+        localStorage.setItem('admin-auth-store', JSON.stringify({ accessToken, user }));
+      }
+
+      set({ user, accessToken, isAuthenticated: true, isLoading: false });
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
     }
-  )
-);
+  },
+
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('admin_access_token');
+      localStorage.removeItem('admin-auth-store');
+    }
+    set({ user: null, accessToken: null, isAuthenticated: false });
+  },
+}));

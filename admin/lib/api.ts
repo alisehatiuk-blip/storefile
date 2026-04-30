@@ -21,6 +21,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 || error.response?.status === 403) {
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         localStorage.removeItem('admin_access_token');
+        localStorage.removeItem('admin-auth-store');
         window.location.href = '/login';
       }
     }

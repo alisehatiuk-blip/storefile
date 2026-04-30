@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,10 +18,19 @@ type Form = z.infer<typeof schema>;
 
 export default function AdminLoginPage() {
   const [showPw, setShowPw] = useState(false);
-  const { login, isLoading } = useAdminAuthStore();
+  const { login, isLoading, init } = useAdminAuthStore();
   const router = useRouter();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema) });
+  // Hydrate on mount and redirect if already logged in
+  useEffect(() => {
+    init();
+    const token = localStorage.getItem('admin_access_token');
+    if (token) router.replace('/dashboard');
+  }, []);
+
+  const { register, handleSubmit, formState: { errors } } = useForm<Form>({
+    resolver: zodResolver(schema),
+  });
 
   const onSubmit = async (data: Form) => {
     try {
@@ -35,49 +44,84 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#0f0f1a' }}>
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,0.2), transparent)' }}
-      />
-      <div className="relative w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl" style={{ background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', boxShadow: '0 20px 40px rgba(79,70,229,0.4)' }}>
-            <Shield className="w-8 h-8 text-white" />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: '#0f0f1a', position: 'relative', overflow: 'hidden' }}>
+      {/* Background gradient */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,0.18), transparent)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '20%', right: '15%', width: 300, height: 300, background: 'rgba(99,102,241,0.05)', borderRadius: '50%', filter: 'blur(80px)', pointerEvents: 'none' }} />
+
+      <div style={{ position: 'relative', width: '100%', maxWidth: 420 }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', boxShadow: '0 20px 40px rgba(79,70,229,0.35)' }}>
+            <Shield style={{ width: 32, height: 32, color: 'white' }} />
           </div>
-          <h1 className="text-2xl font-bold text-white">پنل مدیریت</h1>
-          <p className="text-sm mt-1" style={{ color: '#64748b' }}>دیجی‌اسکریپت — فقط مدیران</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white', marginBottom: 4 }}>پنل مدیریت</h1>
+          <p style={{ fontSize: '0.875rem', color: '#475569' }}>دیجی‌اسکریپت — ورود مدیران</p>
         </div>
 
-        <div className="card p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Card */}
+        <div className="card" style={{ padding: '2rem' }}>
+          <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: '#cbd5e1' }}>ایمیل مدیر</label>
-              <input {...register('email')} type="email" placeholder="admin@example.com" className="input" dir="ltr" />
-              {errors.email && <p className="text-xs mt-1" style={{ color: '#f87171' }}>{errors.email.message}</p>}
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#cbd5e1', marginBottom: 6 }}>ایمیل مدیر</label>
+              <input
+                {...register('email')}
+                type="email"
+                placeholder="admin@example.com"
+                className="input"
+                dir="ltr"
+                autoComplete="email"
+                autoFocus
+              />
+              {errors.email && <p style={{ fontSize: '0.75rem', color: '#f87171', marginTop: 4 }}>{errors.email.message}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: '#cbd5e1' }}>رمز عبور</label>
-              <div className="relative">
-                <input {...register('password')} type={showPw ? 'text' : 'password'} className="input" style={{ paddingLeft: '2.5rem' }} />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute top-1/2 -translate-y-1/2 left-3" style={{ color: '#64748b' }}>
-                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#cbd5e1', marginBottom: 6 }}>رمز عبور</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  {...register('password')}
+                  type={showPw ? 'text' : 'password'}
+                  className="input"
+                  style={{ paddingLeft: '2.5rem' }}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  {showPw ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
                 </button>
               </div>
-              {errors.password && <p className="text-xs mt-1" style={{ color: '#f87171' }}>{errors.password.message}</p>}
+              {errors.password && <p style={{ fontSize: '0.75rem', color: '#f87171', marginTop: 4 }}>{errors.password.message}</p>}
             </div>
 
-            <button type="submit" disabled={isLoading} className="btn-primary w-full justify-center py-3 mt-2" style={{ opacity: isLoading ? 0.6 : 1 }}>
-              {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> در حال ورود...</> : 'ورود به پنل'}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn-primary"
+              style={{ justifyContent: 'center', padding: '0.875rem', marginTop: 8, fontSize: '0.9375rem', opacity: isLoading ? 0.7 : 1 }}
+            >
+              {isLoading ? (
+                <><Loader2 style={{ width: 18, height: 18, animation: 'spin 0.8s linear infinite' }} /> در حال ورود...</>
+              ) : (
+                'ورود به پنل مدیریت'
+              )}
             </button>
           </form>
-        </div>
 
-        <p className="text-center text-xs mt-4" style={{ color: '#334155' }}>
-          admin@digiscript.ir — Admin@123456
-        </p>
+          {/* Demo credentials */}
+          <div style={{ marginTop: '1.5rem', padding: '0.875rem', borderRadius: 10, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)' }}>
+            <p style={{ fontSize: '0.75rem', color: '#6366f1', fontWeight: 600, marginBottom: 6 }}>اطلاعات تست:</p>
+            <p style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'monospace', direction: 'ltr', lineHeight: 1.6 }}>
+              admin@digiscript.ir<br />
+              Admin@123456
+            </p>
+          </div>
+        </div>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

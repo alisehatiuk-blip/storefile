@@ -46,7 +46,26 @@ export async function buildServer() {
   });
 
   await fastify.register(fastifyCors, {
-    origin: [env.FRONTEND_URL, env.ADMIN_URL],
+    origin: (origin, cb) => {
+      const allowed = [
+        env.FRONTEND_URL,
+        env.ADMIN_URL,
+        'http://localhost:3000',
+        'http://localhost:3001',
+      ];
+      // Allow Cloudflare tunnels and localtunnel in dev
+      if (
+        !origin ||
+        allowed.includes(origin) ||
+        origin.endsWith('.trycloudflare.com') ||
+        origin.endsWith('.loca.lt') ||
+        env.NODE_ENV === 'development'
+      ) {
+        cb(null, true);
+      } else {
+        cb(new Error('Not allowed by CORS'), false);
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });

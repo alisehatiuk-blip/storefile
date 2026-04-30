@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Package, Tag, Users, ShoppingBag, MessageSquare,
-  Settings, FileText, LogOut, Shield, Activity,
+  Settings, Activity, ChevronRight, Shield, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminAuthStore } from '@/store/auth';
@@ -18,7 +18,7 @@ const navGroups = [
     ],
   },
   {
-    label: 'مدیریت محتوا',
+    label: 'محتوا',
     items: [
       { href: '/dashboard/products', icon: Package, label: 'محصولات' },
       { href: '/dashboard/categories', icon: Tag, label: 'دسته‌بندی‌ها' },
@@ -45,9 +45,13 @@ const navGroups = [
   },
 ];
 
-export default function AdminSidebar() {
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function AdminSidebar({ isOpen, onClose }: Props) {
   const pathname = usePathname();
-  const { user, logout } = useAdminAuthStore();
 
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href;
@@ -55,69 +59,74 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside className="fixed right-0 top-0 h-full w-[260px] bg-[#0a0a14] border-l border-white/[0.06] flex flex-col z-30">
-      {/* Logo */}
-      <div className="p-5 border-b border-white/[0.06]">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center">
-            <Shield className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <p className="text-white font-bold text-sm">دیجی‌اسکریپت</p>
-            <p className="text-slate-500 text-xs">پنل مدیریت</p>
-          </div>
-        </div>
-      </div>
+    <>
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-20 lg:hidden"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          onClick={onClose}
+        />
+      )}
 
-      {/* User */}
-      <div className="p-4 border-b border-white/[0.06]">
-        <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03]">
-          <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-            {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-white text-sm font-medium truncate">{user?.firstName || 'مدیر'}</p>
-            <p className="text-slate-500 text-xs truncate">{user?.email}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-6">
-        {navGroups.map((group) => (
-          <div key={group.label}>
-            <p className="text-slate-600 text-xs font-medium uppercase tracking-wider mb-2 px-4">
-              {group.label}
-            </p>
-            <div className="space-y-0.5">
-              {group.items.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'sidebar-link',
-                    isActive(item.href, (item as any).exact) && 'active'
-                  )}
-                >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
-                </Link>
-              ))}
+      <aside
+        className="fixed top-0 h-full z-30 flex flex-col transition-all duration-300"
+        style={{
+          right: 0,
+          width: isOpen ? '260px' : '0px',
+          background: '#0a0a14',
+          borderLeft: isOpen ? '1px solid rgba(255,255,255,0.06)' : 'none',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Logo */}
+        <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', minWidth: '260px' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#4f46e5,#7c3aed)' }}>
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm">دیجی‌اسکریپت</p>
+              <p className="text-xs" style={{ color: '#475569' }}>پنل مدیریت</p>
             </div>
           </div>
-        ))}
-      </nav>
+          <button onClick={onClose} className="p-1.5 rounded-lg transition-all lg:hidden hover:bg-white/5" style={{ color: '#64748b' }}>
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
-      {/* Logout */}
-      <div className="p-4 border-t border-white/[0.06]">
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-all"
-        >
-          <LogOut className="w-4 h-4" />
-          خروج از پنل
-        </button>
-      </div>
-    </aside>
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-6" style={{ minWidth: '260px' }}>
+          {navGroups.map((group) => (
+            <div key={group.label}>
+              <p className="text-xs font-semibold uppercase tracking-wider px-4 mb-2" style={{ color: '#334155' }}>
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const active = isActive(item.href, (item as any).exact);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => { if (window.innerWidth < 1024) onClose(); }}
+                      className="sidebar-link"
+                      style={{
+                        background: active ? 'rgba(99,102,241,0.1)' : 'transparent',
+                        color: active ? '#a5b4fc' : '#94a3b8',
+                        borderColor: active ? 'rgba(99,102,241,0.2)' : 'transparent',
+                      }}
+                    >
+                      <item.icon className="w-4 h-4 flex-shrink-0" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+      </aside>
+    </>
   );
 }

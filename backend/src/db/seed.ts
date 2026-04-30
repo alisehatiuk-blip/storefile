@@ -169,12 +169,12 @@ async function seed() {
 
   // Settings
   const defaultSettings = [
-    { id: uuidv4(), key: 'site_name', value: 'دیجی‌اسکریپت', type: 'string' as const, group: 'general', label: 'نام سایت' },
-    { id: uuidv4(), key: 'site_description', value: 'فروشگاه اسکریپت‌های حرفه‌ای و ابزارهای کسب‌وکار', type: 'string' as const, group: 'general', label: 'توضیحات سایت' },
-    { id: uuidv4(), key: 'contact_email', value: 'info@digiscript.ir', type: 'string' as const, group: 'contact', label: 'ایمیل تماس' },
-    { id: uuidv4(), key: 'contact_phone', value: '021-12345678', type: 'string' as const, group: 'contact', label: 'تلفن تماس' },
-    { id: uuidv4(), key: 'currency', value: 'تومان', type: 'string' as const, group: 'payment', label: 'واحد پول' },
-    { id: uuidv4(), key: 'maintenance_mode', value: 'false', type: 'boolean' as const, group: 'general', label: 'حالت تعمیر' },
+    { id: uuidv4(), key: 'site_name', value: 'دیجی‌اسکریپت', type: 'string' as const, group: 'general', label: 'نام سایت' } as any,
+    { id: uuidv4(), key: 'site_description', value: 'فروشگاه اسکریپت‌های حرفه‌ای و ابزارهای کسب‌وکار', type: 'string' as const, group: 'general', label: 'توضیحات سایت' } as any,
+    { id: uuidv4(), key: 'contact_email', value: 'info@digiscript.ir', type: 'string' as const, group: 'contact', label: 'ایمیل تماس' } as any,
+    { id: uuidv4(), key: 'contact_phone', value: '021-12345678', type: 'string' as const, group: 'contact', label: 'تلفن تماس' } as any,
+    { id: uuidv4(), key: 'currency', value: 'تومان', type: 'string' as const, group: 'payment', label: 'واحد پول' } as any,
+    { id: uuidv4(), key: 'maintenance_mode', value: 'false', type: 'boolean' as const, group: 'general', label: 'حالت تعمیر' } as any,
   ];
 
   for (const setting of defaultSettings) {

@@ -103,7 +103,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
       const { value } = request.body as { value: string };
       const { settings } = await import('../../db/schema');
 
-      await db().update(settings).set({ value }).where(eq(settings.key, key));
+      await db().update(settings).set({ value }).where(eq(settings.key, key as any));
       return sendSuccess(reply, null, 'تنظیمات با موفقیت به‌روزرسانی شد');
     } catch (error) {
       return sendError(reply, 'خطا در به‌روزرسانی تنظیمات');

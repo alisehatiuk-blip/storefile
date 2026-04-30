@@ -1,15 +1,15 @@
 'use client';
 
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import TextAlign from '@tiptap/extension-text-align';
-import Underline from '@tiptap/extension-underline';
-import Highlight from '@tiptap/extension-highlight';
-import TextStyle from '@tiptap/extension-text-style';
-import CharacterCount from '@tiptap/extension-character-count';
+import { TextAlign } from '@tiptap/extension-text-align';
+import { Underline } from '@tiptap/extension-underline';
+import { Highlight } from '@tiptap/extension-highlight';
+import { TextStyle, Color } from '@tiptap/extension-text-style';
+import { CharacterCount } from '@tiptap/extension-character-count';
 import { useState, useCallback } from 'react';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, Code, Code2,
@@ -183,18 +183,6 @@ export default function RichEditor({ value, onChange, placeholder = 'محتوا 
       {/* Editor content */}
       <EditorContent editor={editor} />
 
-      {/* Bubble menu for selected text */}
-      <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-        <div style={{ display: 'flex', gap: 2, background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '4px', boxShadow: '0 8px 20px rgba(0,0,0,0.4)' }}>
-          <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold"><Bold className="w-3.5 h-3.5" /></ToolbarBtn>
-          <ToolbarBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Italic"><Italic className="w-3.5 h-3.5" /></ToolbarBtn>
-          <ToolbarBtn onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive('underline')} title="Underline"><UnderlineIcon className="w-3.5 h-3.5" /></ToolbarBtn>
-          <ToolbarBtn onClick={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive('highlight')} title="Highlight"><Highlighter className="w-3.5 h-3.5" /></ToolbarBtn>
-          {editor.isActive('link') && (
-            <ToolbarBtn onClick={() => editor.chain().focus().unsetLink().run()} title="حذف لینک"><Trash2 className="w-3.5 h-3.5" /></ToolbarBtn>
-          )}
-        </div>
-      </BubbleMenu>
 
       {/* Footer: char count */}
       <div style={{ padding: '6px 14px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#475569', background: 'rgba(0,0,0,0.15)' }}>

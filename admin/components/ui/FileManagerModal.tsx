@@ -4,8 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   X, Upload, Trash2, Check, Image as ImageIcon, File, Loader2,
-  FolderOpen, Grid, List, Search, Download, Eye, Copy, CheckCheck,
-  ZoomIn, ChevronRight,
+  FolderOpen, Grid, List, Search, Copy, CheckCheck, ExternalLink,
 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';

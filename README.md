@@ -1,255 +1,314 @@
-# دیجی‌اسکریپت - پلتفرم فروش محصولات دیجیتال
+# دیجی‌اسکریپت — پلتفرم فروش محصولات دیجیتال
 
-یک پلتفرم کامل و مقیاس‌پذیر برای فروش اسکریپت‌ها، ابزارهای SaaS و راهکارهای کسب‌وکار.
+<div align="center">
 
-## 🏗 معماری سیستم
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-orange)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![Fastify](https://img.shields.io/badge/Fastify-5-blue)
+
+یک پلتفرم کامل، مقیاس‌پذیر و امن برای فروش اسکریپت‌ها، ابزارهای SaaS و راهکارهای کسب‌وکار — با رابط کاربری فارسی RTL
+
+</div>
+
+---
+
+## 📁 ساختار پروژه
 
 ```
-workspace/
-├── backend/          # Fastify + TypeScript + Drizzle ORM
-│   ├── src/
-│   │   ├── config/       # تنظیمات محیطی و متغیرها
-│   │   ├── db/           # اسکیما، مهاجرت‌ها و اتصال DB
-│   │   │   ├── schema/   # مدل‌های Drizzle ORM
-│   │   │   └── migrations/ # فایل SQL
-│   │   ├── middleware/   # Auth، Logger
-│   │   ├── modules/      # ماژول‌های تجاری
-│   │   │   ├── auth/     # احراز هویت و رفرش توکن
-│   │   │   ├── products/ # مدیریت محصولات
-│   │   │   ├── categories/ # دسته‌بندی‌ها
-│   │   │   ├── orders/   # سفارش‌ها
-│   │   │   ├── downloads/ # دانلود امن
-│   │   │   ├── licenses/ # لایسنس‌ها
-│   │   │   ├── tickets/  # تیکت‌های پشتیبانی
-│   │   │   ├── users/    # مدیریت کاربران
-│   │   │   ├── admin/    # داشبورد ادمین
-│   │   │   └── uploads/  # آپلود فایل و تصویر
-│   │   ├── types/        # تایپ‌های TypeScript
-│   │   └── utils/        # توابع کمکی
-│   └── ...
-├── frontend/         # Next.js App Router + TailwindCSS (RTL)
-│   └── app/
-│       ├── (auth)/       # صفحات احراز هویت
-│       ├── (public)/     # صفحات عمومی
-│       └── dashboard/    # داشبورد کاربر
-└── admin/            # پنل ادمین جداگانه (Next.js RTL)
-    └── app/
-        ├── (auth)/       # ورود ادمین
-        └── dashboard/    # بخش‌های مدیریت
+digiscript/
+├── backend/          # API Server — Fastify + TypeScript + Drizzle ORM
+├── frontend/         # سایت اصلی — Next.js 16 + TailwindCSS (RTL/فارسی)
+└── admin/            # پنل ادمین — Next.js جداگانه (RTL/فارسی)
 ```
 
-## 🗄 طراحی پایگاه داده
+---
 
-### جداول اصلی:
+## ⚙️ پیش‌نیازها
 
-| جدول | توضیح |
-|------|-------|
-| `users` | کاربران + نقش‌ها (user/admin/super_admin) |
-| `refresh_tokens` | توکن‌های رفرش JWT |
-| `categories` | دسته‌بندی‌های محصول (درختی) |
-| `products` | محصولات با ویژگی‌های کامل |
-| `product_categories` | رابطه چند-به-چند محصول/دسته |
-| `product_images` | تصاویر گالری محصولات |
-| `product_files` | فایل‌های قابل دانلود (محافظت‌شده) |
-| `orders` | سفارش‌ها |
-| `order_items` | آیتم‌های هر سفارش |
-| `licenses` | کلیدهای لایسنس |
-| `downloads` | لاگ دانلودها با توکن موقت |
-| `tickets` | تیکت‌های پشتیبانی |
-| `ticket_messages` | پیام‌های هر تیکت |
-| `settings` | تنظیمات سیستم (key-value) |
-| `activity_logs` | لاگ فعالیت‌ها و امنیت |
+قبل از شروع مطمئن شو این‌ها نصب هستند:
 
-## 🚀 راه‌اندازی
+| ابزار | نسخه حداقل | لینک دانلود |
+|-------|------------|------------|
+| **Node.js** | v20+ | https://nodejs.org |
+| **npm** | v10+ | همراه Node.js |
+| **MySQL** | v8.0+ | https://dev.mysql.com/downloads/ |
 
-### پیش‌نیازها:
-- Node.js >= 20
-- MySQL >= 8.0
+---
 
-### ۱. راه‌اندازی MySQL
+## 🚀 راه‌اندازی گام به گام
+
+### گام ۱ — دانلود پروژه
 
 ```bash
-# ایجاد دیتابیس
-mysql -u root -p < backend/src/db/migrations/0001_init.sql
+git clone https://github.com/alisehatiuk-blip/storefile.git digiscript
+cd digiscript
+git checkout cursor/digital-marketplace-platform-9cc2
 ```
 
-### ۲. راه‌اندازی Backend
+---
+
+### گام ۲ — راه‌اندازی MySQL
+
+ابتدا MySQL را شروع کن، سپس دیتابیس بساز:
+
+```bash
+# ورود به MySQL
+mysql -u root -p
+
+# داخل MySQL:
+CREATE DATABASE marketplace_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+EXIT;
+
+# اجرای migration (ساخت تمام جداول)
+mysql -u root -p marketplace_db < backend/src/db/migrations/0001_init.sql
+```
+
+---
+
+### گام ۳ — راه‌اندازی Backend
 
 ```bash
 cd backend
 
 # کپی فایل محیطی
 cp .env.example .env
-# ویرایش .env و تنظیم مقادیر DB و JWT
+```
+
+فایل `.env` را باز کن و مقادیر زیر را ویرایش کن:
+
+```env
+# اطلاعات دیتابیس
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=رمز_MySQL_خودت
+DB_NAME=marketplace_db
+
+# JWT Secret (حتماً تغییر بده — حداقل ۳۲ کاراکتر)
+JWT_SECRET=یک_کلید_تصادفی_قوی_حداقل_۳۲_کاراکتر_اینجا
+JWT_REFRESH_SECRET=یک_کلید_دیگر_تصادفی_قوی_حداقل_۳۲_کاراکتر
+
+# سایر تنظیمات (پیش‌فرض مناسب هستند)
+PORT=4000
+FRONTEND_URL=http://localhost:3000
+ADMIN_URL=http://localhost:3001
+```
+
+```bash
+# نصب وابستگی‌ها
+npm install
+
+# بارگذاری داده‌های اولیه (محصولات، کاربران، دسته‌بندی‌ها)
+npm run seed
+
+# شروع سرور توسعه
+npm run dev
+```
+
+✅ بک‌اند روی **http://localhost:4000** اجرا می‌شود
+
+---
+
+### گام ۴ — راه‌اندازی Frontend (سایت اصلی)
+
+```bash
+# از پوشه اصلی پروژه:
+cd frontend
 
 # نصب وابستگی‌ها
 npm install
 
-# اجرا در محیط توسعه
-npm run dev
-
-# بارگذاری داده‌های اولیه
-npm run seed
-```
-
-سرور روی `http://localhost:4000` اجرا می‌شود.
-
-### ۳. راه‌اندازی Frontend (سایت اصلی)
-
-```bash
-cd frontend
-
-# کپی محیط
-cp .env.local.example .env.local
-
-# نصب
-npm install
-
-# اجرا
+# شروع
 npm run dev
 ```
 
-سایت روی `http://localhost:3000` اجرا می‌شود.
+✅ سایت اصلی روی **http://localhost:3000** اجرا می‌شود
 
-### ۴. راه‌اندازی Admin Panel
+---
+
+### گام ۵ — راه‌اندازی پنل ادمین
 
 ```bash
+# از پوشه اصلی پروژه:
 cd admin
 
-# نصب
+# نصب وابستگی‌ها
 npm install
 
-# اجرا
+# شروع روی پورت 3001
 npm run dev -- --port 3001
 ```
 
-پنل ادمین روی `http://localhost:3001` اجرا می‌شود.
+✅ پنل ادمین روی **http://localhost:3001** اجرا می‌شود
 
-## 🔑 دسترسی پیش‌فرض (پس از seed)
+---
 
-| نقش | ایمیل | رمز عبور |
-|-----|-------|---------|
-| ابر مدیر | admin@digiscript.ir | Admin@123456 |
-| کاربر آزمایشی | user@example.com | User@123456 |
+## 🔑 اطلاعات ورود (پس از seed)
 
-## 📡 API Endpoints
+| نقش | ایمیل | رمز عبور | آدرس |
+|-----|-------|---------|------|
+| **ابر مدیر** | admin@digiscript.ir | Admin@123456 | http://localhost:3001 |
+| **کاربر آزمایشی** | user@example.com | User@123456 | http://localhost:3000 |
 
-### احراز هویت (`/api/auth`)
-- `POST /register` - ثبت‌نام
-- `POST /login` - ورود
-- `POST /refresh` - تجدید توکن
-- `POST /logout` - خروج
-- `GET /verify-email/:token` - تایید ایمیل
-- `POST /forgot-password` - بازیابی رمز
-- `POST /reset-password` - تغییر رمز
-- `GET /me` - اطلاعات کاربر جاری
+> ⚠️ **مهم:** رمزهای بالا فقط برای محیط توسعه است. در محیط production حتماً تغییر بده.
 
-### محصولات (`/api/products`)
-- `GET /` - لیست محصولات (فیلتر، جستجو، صفحه‌بندی)
-- `GET /:slug` - جزئیات محصول
-- `POST /` - ایجاد محصول (ادمین)
-- `PUT /:id` - ویرایش محصول (ادمین)
-- `DELETE /:id` - حذف محصول (ادمین)
+---
 
-### دسته‌بندی‌ها (`/api/categories`)
-- `GET /` - همه دسته‌بندی‌ها
-- `GET /:slug` - دسته‌بندی خاص
-- `POST /` - ایجاد (ادمین)
-- `PUT /:id` - ویرایش (ادمین)
-- `DELETE /:id` - حذف (ادمین)
+## 🌐 صفحات سایت اصلی (localhost:3000)
 
-### سفارش‌ها (`/api/orders`)
-- `POST /` - ثبت سفارش (کاربر)
-- `GET /my` - سفارش‌های کاربر
-- `GET /:id` - جزئیات سفارش
-- `GET /` - همه سفارش‌ها (ادمین)
+| صفحه | آدرس | توضیح |
+|------|------|-------|
+| صفحه اصلی | `/` | hero، ویژگی‌ها، محصولات |
+| محصولات | `/products` | لیست با فیلتر و جستجو |
+| جزئیات محصول | `/products/[slug]` | گالری، ویژگی‌ها، خرید |
+| جستجو | `/search` | جستجوی زنده |
+| درباره ما | `/about` | |
+| تماس | `/contact` | |
+| سوالات متداول | `/faq` | |
+| ورود | `/login` | |
+| ثبت‌نام | `/register` | |
+| داشبورد | `/dashboard` | (نیاز به ورود) |
+| سفارش‌ها | `/dashboard/orders` | |
+| دانلودها | `/dashboard/downloads` | |
+| لایسنس‌ها | `/dashboard/licenses` | |
+| تیکت‌ها | `/dashboard/tickets` | |
+| پروفایل | `/dashboard/profile` | |
 
-### دانلودها (`/api/downloads`)
-- `POST /generate/:fileId` - ایجاد لینک دانلود موقت
-- `GET /file/:token` - دانلود فایل با توکن
-- `GET /my` - تاریخچه دانلود
+## 🔐 پنل ادمین (localhost:3001)
 
-### لایسنس‌ها (`/api/licenses`)
-- `GET /my` - لایسنس‌های کاربر
-- `GET /verify/:key` - تایید کلید لایسنس
+| بخش | توضیح |
+|-----|-------|
+| داشبورد | آمار درآمد، سفارش‌ها، فعالیت‌ها |
+| محصولات | CRUD کامل با آپلود فایل و تصویر |
+| دسته‌بندی‌ها | مدیریت سلسله‌مراتبی |
+| کاربران | مدیریت، فعال/غیرفعال |
+| سفارش‌ها | مشاهده و فیلتر |
+| تیکت‌ها | پاسخ به تیکت‌های پشتیبانی |
+| تنظیمات | تنظیمات سیستم key-value |
+| لاگ‌ها | لاگ فعالیت و امنیت |
 
-### تیکت‌ها (`/api/tickets`)
-- `POST /` - ایجاد تیکت
-- `GET /my` - تیکت‌های کاربر
-- `GET /:id` - جزئیات تیکت
-- `POST /:id/reply` - پاسخ به تیکت
-- `PATCH /:id/close` - بستن تیکت
-- `GET /` - همه تیکت‌ها (ادمین)
+---
 
-### کاربران (`/api/users`)
-- `GET /me` - پروفایل
-- `PUT /me` - ویرایش پروفایل
-- `GET /` - همه کاربران (ادمین)
-- `GET /:id` - کاربر خاص (ادمین)
-- `PUT /:id` - ویرایش کاربر (ادمین)
+## 📡 API Endpoints (localhost:4000)
 
-### ادمین (`/api/admin`)
-- `GET /dashboard` - آمار داشبورد
-- `GET /logs` - لاگ‌های سیستم
-- `GET /settings` - تنظیمات
-- `PUT /settings/:key` - بروزرسانی تنظیمات
+```
+GET  /health                          # وضعیت سرور
 
-### آپلود (`/api/uploads`)
-- `POST /images/product/:productId` - آپلود تصویر محصول
-- `POST /files/product/:productId` - آپلود فایل محصول
-- `DELETE /images/:imageId` - حذف تصویر
-- `DELETE /files/:fileId` - حذف فایل
+POST /api/auth/register               # ثبت‌نام
+POST /api/auth/login                  # ورود
+POST /api/auth/refresh                # تجدید توکن
+POST /api/auth/logout                 # خروج
+
+GET  /api/products                    # لیست محصولات
+GET  /api/products/:slug              # جزئیات محصول
+POST /api/products                    # ایجاد (ادمین)
+PUT  /api/products/:id                # ویرایش (ادمین)
+DELETE /api/products/:id              # حذف (ادمین)
+
+GET  /api/categories                  # دسته‌بندی‌ها
+POST /api/orders                      # ثبت سفارش
+GET  /api/orders/my                   # سفارش‌های من
+
+POST /api/downloads/generate/:fileId  # ایجاد لینک دانلود
+GET  /api/downloads/file/:token       # دانلود فایل
+
+GET  /api/licenses/my                 # لایسنس‌های من
+GET  /api/licenses/verify/:key        # تایید لایسنس
+
+POST /api/tickets                     # ایجاد تیکت
+GET  /api/tickets/my                  # تیکت‌های من
+
+GET  /api/admin/dashboard             # آمار ادمین (ادمین)
+GET  /api/admin/logs                  # لاگ‌ها (ادمین)
+```
+
+---
+
+## 🗄️ جداول دیتابیس
+
+| جدول | توضیح |
+|------|-------|
+| `users` | کاربران + نقش‌ها |
+| `refresh_tokens` | توکن‌های JWT |
+| `categories` | دسته‌بندی‌های محصول |
+| `products` | محصولات |
+| `product_categories` | رابطه محصول-دسته |
+| `product_images` | تصاویر محصولات |
+| `product_files` | فایل‌های دانلود (محافظت شده) |
+| `orders` | سفارش‌ها |
+| `order_items` | آیتم‌های سفارش |
+| `licenses` | کلیدهای لایسنس |
+| `downloads` | لاگ دانلودها + توکن موقت |
+| `tickets` | تیکت‌های پشتیبانی |
+| `ticket_messages` | پیام‌های تیکت |
+| `settings` | تنظیمات سیستم |
+| `activity_logs` | لاگ امنیتی |
+
+---
 
 ## 🔒 امنیت
 
-- **JWT** با access token کوتاه‌مدت (15 دقیقه) و refresh token (7 روز)
-- **RBAC** - کنترل دسترسی مبتنی بر نقش
-- **Rate Limiting** - محدودیت ۱۰۰ درخواست در دقیقه
-- **Helmet** - هدرهای امنیتی
-- **CORS** - محدود به دامنه‌های مجاز
-- **دانلود امن** - توکن موقت با انقضای ۱ ساعت، حداکثر ۳ بار
-- **bcrypt** - هش رمز عبور با salt rounds 12
-- **Zod** - اعتبارسنجی ورودی‌ها
-- **لاگ فعالیت** - ثبت تمام رویدادهای مهم
+- JWT access token (15 دقیقه) + refresh token (7 روز) با rotation
+- bcrypt رمز عبور (12 rounds)
+- Rate limiting (100 req/min)
+- Helmet security headers
+- CORS محدود به دامنه‌های مجاز
+- دانلود فایل با توکن HMAC-SHA256 موقت (1 ساعت، max 3 بار)
+- Zod validation روی تمام ورودی‌ها
+- لاگ تمام رویدادهای مهم
 
-## 🌐 ویژگی‌های UI
+---
 
-- **RTL کامل** - راست‌به‌چپ برای زبان فارسی
-- **فونت Vazirmatn** - فونت فارسی حرفه‌ای
-- **Dark Theme** - تم تاریک مدرن
-- **Responsive** - موبایل، تبلت، دسکتاپ
-- **Animations** - انیمیشن‌های نرم با CSS
-- **Glass Morphism** - افکت شیشه‌ای مدرن
+## 🛠️ تکنولوژی‌ها
 
-## 📦 صفحات فرانت‌اند
+**Backend:**
+- Fastify 5 + TypeScript
+- Drizzle ORM + MySQL2
+- JWT + bcryptjs + Zod
 
-### سایت عمومی:
-- `/` - صفحه اصلی
-- `/products` - لیست محصولات با فیلتر
-- `/products/[slug]` - جزئیات محصول
-- `/categories/[slug]` - دسته‌بندی
-- `/search` - جستجو
-- `/about` - درباره ما
-- `/contact` - تماس
-- `/faq` - سوالات متداول
-- `/login` - ورود
-- `/register` - ثبت‌نام
+**Frontend & Admin:**
+- Next.js 16 (App Router) + TypeScript
+- TailwindCSS v4
+- TanStack Query + Zustand + React Hook Form
 
-### داشبورد کاربر:
-- `/dashboard` - خلاصه
-- `/dashboard/orders` - سفارش‌ها
-- `/dashboard/downloads` - دانلودها
-- `/dashboard/licenses` - لایسنس‌ها
-- `/dashboard/tickets` - تیکت‌ها
-- `/dashboard/profile` - پروفایل
+---
 
-### پنل ادمین:
-- `/dashboard` - داشبورد با آمار
-- `/dashboard/products` - مدیریت محصولات
-- `/dashboard/products/new` - محصول جدید
-- `/dashboard/categories` - دسته‌بندی‌ها
-- `/dashboard/users` - کاربران
-- `/dashboard/orders` - سفارش‌ها
-- `/dashboard/tickets` - تیکت‌ها
-- `/dashboard/settings` - تنظیمات
-- `/dashboard/logs` - لاگ‌های سیستم
+## 📝 دستورات مفید
+
+```bash
+# Backend
+npm run dev          # اجرای توسعه
+npm run build        # build تولید
+npm run seed         # بارگذاری داده‌های اولیه
+npm run db:push      # push schema به دیتابیس
+
+# Frontend & Admin
+npm run dev          # اجرای توسعه
+npm run build        # build تولید
+npm start            # اجرای تولید
+```
+
+---
+
+## ❓ مشکلات رایج
+
+**خطای اتصال به دیتابیس:**
+- مطمئن شو MySQL در حال اجراست
+- اطلاعات `.env` را چک کن
+- مطمئن شو `marketplace_db` ساخته شده
+
+**خطای توکن JWT:**
+- مطمئن شو `JWT_SECRET` حداقل ۳۲ کاراکتر دارد
+- مطمئن شو بک‌اند در حال اجراست
+
+**صفحات لود نمی‌شوند:**
+- بک‌اند باید قبل از فرانت‌اند اجرا شده باشد
+- `NEXT_PUBLIC_API_URL` در `.env.local` را چک کن
+
+---
+
+<div align="center">
+ساخته شده با ❤️ برای بازار ایران
+</div>

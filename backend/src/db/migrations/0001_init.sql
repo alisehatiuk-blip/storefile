@@ -1,12 +1,9 @@
--- Digital Product Marketplace - Initial Schema
--- Run this against your MySQL database
-
-CREATE DATABASE IF NOT EXISTS marketplace_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET NAMES utf8mb4;
+SET foreign_key_checks = 0;
 USE marketplace_db;
 
--- Users table
 CREATE TABLE IF NOT EXISTS users (
-  id VARCHAR(36) PRIMARY KEY,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
   email VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
   first_name VARCHAR(100),
@@ -27,10 +24,9 @@ CREATE TABLE IF NOT EXISTS users (
   INDEX users_is_active_idx (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Refresh tokens
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-  id VARCHAR(36) PRIMARY KEY,
-  user_id VARCHAR(36) NOT NULL,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
+  user_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   token VARCHAR(500) NOT NULL,
   expires_at TIMESTAMP NOT NULL,
   is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
@@ -38,11 +34,10 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   UNIQUE INDEX refresh_tokens_token_idx (token(255)),
   INDEX refresh_tokens_user_idx (user_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Categories
 CREATE TABLE IF NOT EXISTS categories (
-  id VARCHAR(36) PRIMARY KEY,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   slug VARCHAR(120) NOT NULL,
   description TEXT,
@@ -58,20 +53,19 @@ CREATE TABLE IF NOT EXISTS categories (
   INDEX categories_parent_idx (parent_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Products
 CREATE TABLE IF NOT EXISTS products (
-  id VARCHAR(36) PRIMARY KEY,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   slug VARCHAR(300) NOT NULL,
   short_description TEXT NOT NULL,
   full_description TEXT NOT NULL,
-  features JSON DEFAULT ('[]'),
+  features JSON,
   price DECIMAL(10,2) NOT NULL,
   support_price DECIMAL(10,2) DEFAULT 0.00,
   status ENUM('draft', 'published', 'archived') NOT NULL DEFAULT 'draft',
   demo_url VARCHAR(500),
   version VARCHAR(50) NOT NULL DEFAULT '1.0.0',
-  tags JSON DEFAULT ('[]'),
+  tags JSON,
   download_count INT NOT NULL DEFAULT 0,
   view_count INT NOT NULL DEFAULT 0,
   rating DECIMAL(3,2) DEFAULT 0.00,
@@ -86,21 +80,19 @@ CREATE TABLE IF NOT EXISTS products (
   INDEX products_created_at_idx (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Product categories (pivot)
 CREATE TABLE IF NOT EXISTS product_categories (
-  product_id VARCHAR(36) NOT NULL,
-  category_id VARCHAR(36) NOT NULL,
+  product_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  category_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (product_id, category_id),
   INDEX pc_product_idx (product_id),
   INDEX pc_category_idx (category_id),
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Product images
 CREATE TABLE IF NOT EXISTS product_images (
-  id VARCHAR(36) PRIMARY KEY,
-  product_id VARCHAR(36) NOT NULL,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
+  product_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   url VARCHAR(500) NOT NULL,
   alt_text VARCHAR(255),
   sort_order INT NOT NULL DEFAULT 0,
@@ -108,12 +100,11 @@ CREATE TABLE IF NOT EXISTS product_images (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX product_images_product_idx (product_id),
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Product files (protected downloads)
 CREATE TABLE IF NOT EXISTS product_files (
-  id VARCHAR(36) PRIMARY KEY,
-  product_id VARCHAR(36) NOT NULL,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
+  product_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   file_name VARCHAR(255) NOT NULL,
   file_path VARCHAR(500) NOT NULL,
   file_size INT NOT NULL,
@@ -123,13 +114,12 @@ CREATE TABLE IF NOT EXISTS product_files (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX product_files_product_idx (product_id),
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Orders
 CREATE TABLE IF NOT EXISTS orders (
-  id VARCHAR(36) PRIMARY KEY,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
   order_number VARCHAR(50) NOT NULL,
-  user_id VARCHAR(36) NOT NULL,
+  user_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   status ENUM('pending', 'completed', 'cancelled', 'refunded') NOT NULL DEFAULT 'pending',
   total_amount DECIMAL(10,2) NOT NULL,
   payment_method VARCHAR(50) NOT NULL DEFAULT 'mock',
@@ -142,13 +132,12 @@ CREATE TABLE IF NOT EXISTS orders (
   INDEX orders_user_idx (user_id),
   INDEX orders_status_idx (status),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Order items
 CREATE TABLE IF NOT EXISTS order_items (
-  id VARCHAR(36) PRIMARY KEY,
-  order_id VARCHAR(36) NOT NULL,
-  product_id VARCHAR(36) NOT NULL,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
+  order_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  product_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   product_title VARCHAR(255) NOT NULL,
   price DECIMAL(10,2) NOT NULL,
   includes_support BOOLEAN NOT NULL DEFAULT FALSE,
@@ -159,15 +148,14 @@ CREATE TABLE IF NOT EXISTS order_items (
   INDEX order_items_product_idx (product_id),
   FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Licenses
 CREATE TABLE IF NOT EXISTS licenses (
-  id VARCHAR(36) PRIMARY KEY,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
   license_key VARCHAR(64) NOT NULL,
-  user_id VARCHAR(36) NOT NULL,
-  product_id VARCHAR(36) NOT NULL,
-  order_id VARCHAR(36) NOT NULL,
+  user_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  product_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  order_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   status ENUM('active', 'expired', 'revoked') NOT NULL DEFAULT 'active',
   expires_at TIMESTAMP NULL,
   activated_at TIMESTAMP NULL,
@@ -180,15 +168,14 @@ CREATE TABLE IF NOT EXISTS licenses (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT,
   FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Downloads
 CREATE TABLE IF NOT EXISTS downloads (
-  id VARCHAR(36) PRIMARY KEY,
-  user_id VARCHAR(36) NOT NULL,
-  product_id VARCHAR(36) NOT NULL,
-  file_id VARCHAR(36) NOT NULL,
-  order_id VARCHAR(36) NOT NULL,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
+  user_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  product_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  file_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  order_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   token VARCHAR(255) NOT NULL,
   expires_at TIMESTAMP NOT NULL,
   used_at TIMESTAMP NULL,
@@ -201,13 +188,12 @@ CREATE TABLE IF NOT EXISTS downloads (
   INDEX downloads_user_idx (user_id),
   INDEX downloads_product_idx (product_id),
   INDEX downloads_order_idx (order_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tickets
 CREATE TABLE IF NOT EXISTS tickets (
-  id VARCHAR(36) PRIMARY KEY,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
   ticket_number VARCHAR(20) NOT NULL,
-  user_id VARCHAR(36) NOT NULL,
+  user_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   product_id VARCHAR(36) NULL,
   order_id VARCHAR(36) NULL,
   subject VARCHAR(255) NOT NULL,
@@ -222,11 +208,10 @@ CREATE TABLE IF NOT EXISTS tickets (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Ticket messages
 CREATE TABLE IF NOT EXISTS ticket_messages (
-  id VARCHAR(36) PRIMARY KEY,
-  ticket_id VARCHAR(36) NOT NULL,
-  sender_id VARCHAR(36) NOT NULL,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
+  ticket_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  sender_id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   sender_role ENUM('user', 'admin') NOT NULL,
   message TEXT NOT NULL,
   attachment_url VARCHAR(500),
@@ -236,23 +221,21 @@ CREATE TABLE IF NOT EXISTS ticket_messages (
   FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Settings
 CREATE TABLE IF NOT EXISTS settings (
-  id VARCHAR(36) PRIMARY KEY,
-  `key` VARCHAR(100) NOT NULL,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
+  setting_key VARCHAR(100) NOT NULL,
   value TEXT,
   type ENUM('string', 'number', 'boolean', 'json') NOT NULL DEFAULT 'string',
-  `group` VARCHAR(50) NOT NULL DEFAULT 'general',
+  setting_group VARCHAR(50) NOT NULL DEFAULT 'general',
   label VARCHAR(255),
   description TEXT,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE INDEX settings_key_idx (`key`),
-  INDEX settings_group_idx (`group`)
+  UNIQUE INDEX settings_key_idx (setting_key),
+  INDEX settings_group_idx (setting_group)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Activity logs
 CREATE TABLE IF NOT EXISTS activity_logs (
-  id VARCHAR(36) PRIMARY KEY,
+  id VARCHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PRIMARY KEY,
   user_id VARCHAR(36) NULL,
   action VARCHAR(100) NOT NULL,
   resource VARCHAR(100),
@@ -266,4 +249,6 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   INDEX activity_logs_action_idx (action),
   INDEX activity_logs_created_at_idx (created_at),
   INDEX activity_logs_severity_idx (severity)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET foreign_key_checks = 1;
